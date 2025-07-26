@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Move main.py out of venv folder if it exists there
+if [ -f venv/main.py ]; then
+    mv venv/main.py .
+    echo "Moved main.py from venv/ to backend/"
+else
+    echo "main.py not found inside venv/, skipping move."
+fi
+
+# Create database.py with correct content
+cat > database.py << EOF
+from sqlalchemy import create_engine, Column, String, Float, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+DATABASE_URL = "sqlite:///./fleetai.db"
+
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+class VehicleDB(Base):
+    __tablename__ = "vehicles"
+
+    vehicleId = Column(String, primary_key=True, index=True)
+    model = Column(String)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    speed = Column(Float)
+    engineTemp = Column(Float)
+    isFaulty = Column(Boolean, default=False)
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
+EOF
+
+echo "Created database.py in backend/"
+
+# List files to confirm
+echo "Current files in backend/:"
+ls -l
+
+echo "Done! Now activate your virtual environment and run the server:"
+echo "source venv/bin/activate"
+echo "uvicorn main:app --reload"
